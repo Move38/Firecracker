@@ -20,7 +20,9 @@ bool shouldSendSpark = false;
 int receivedSparkFrom = -1;
 bool hasNeighbor[] = {0, 0, 0, 0, 0, 0};
 uint32_t firecrackerTime_ms = 0;
-uint16_t firecrackerDuration_ms = 1000;
+uint16_t firecrackerDuration_ms = 400;
+uint16_t sendSparkDelay_ms = 100;
+uint16_t sendSparkDuration_ms = firecrackerDuration_ms - sendSparkDelay_ms;
 
 void setup() {
   // put your setup code here, to run once:
@@ -38,29 +40,13 @@ void loop() {
   }
 
   if (shouldSendSpark) {
-    //    byte neighborFace;
-    //    bool willSendSpark = false;
-    //
-    //    FOREACH_FACE(f) {
-    //      if (f != receivedSparkFrom && hasNeighbor[f]) {
-    //        willSendSpark = true;
-    //      }
-    //    }
-    //
-    //    do {
-    //      neighborFace = millis() % 6; // pick random face
-    //    }
-    //    while (neighborFace == receivedSparkFrom || !hasNeighbor[neighborFace]);
-    //
-    //    if (willSendSpark) {
-    //      byte face = 1 << neighborFace;
-    //      irSendData(2, face);
-    //    }
 
     FOREACH_FACE(f) {
       if (hasNeighbor[f]) {
-        byte face = 1 << f;
-        irSendData(2, face);
+        if (f != receivedSparkFrom) {
+          byte face = 1 << f;
+          irSendData(2, face);
+        }
       }
     }
   }
@@ -94,9 +80,12 @@ void loop() {
     byte face = millis() % 6; // pick random face
     showOnlyNeighbors();
     setFaceColor(face, WHITE);
-  }
-  else if (now - firecrackerTime_ms < firecrackerDuration_ms + 100) {
-    shouldSendSpark = true;
+
+    if ( now - firecrackerTime_ms > sendSparkDelay_ms &&
+         now - firecrackerTime_ms < sendSparkDelay_ms + sendSparkDuration_ms) {
+
+      shouldSendSpark = true;
+    }
   }
   else {
     shouldSendSpark = false;
@@ -109,7 +98,7 @@ void showOnlyNeighbors() {
   FOREACH_FACE(f) {
     // acknowledge neighbors presence w/ red glow
     if (hasNeighbor[f]) {
-      setFaceColor(f, makeColorHSB(25,255,128));
+      setFaceColor(f, makeColorHSB(25, 255, 128));
     }
     else {
       setFaceColor(f, OFF);
