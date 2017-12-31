@@ -17,7 +17,7 @@
 #include "blinklib.h"
 
 bool shouldSendSpark = false;
-int receivedSparkFrom = -1;
+bool didReceivedSparkFrom[] = {0, 0, 0, 0, 0, 0};
 bool hasNeighbor[] = {0, 0, 0, 0, 0, 0};
 uint32_t firecrackerTime_ms = 0;
 uint16_t firecrackerDuration_ms = 400;
@@ -38,7 +38,7 @@ void loop() {
 
   // if button pressed, firecracker
   if (buttonSingleClicked()) {
-    receivedSparkFrom = -1;
+    resetReceived();
     firecrackerTime_ms = now;
     curColor = millis() % numColors;
   }
@@ -47,7 +47,7 @@ void loop() {
 
     FOREACH_FACE(f) {
       if (hasNeighbor[f]) {
-        if (f != receivedSparkFrom) {
+        if (!didReceivedSparkFrom[f]) {
           byte face = 1 << f;
           irSendData(2 + curColor, face);
         }
@@ -73,7 +73,7 @@ void loop() {
         if (neighbor >= 2 && neighbor <= 2+numColors) { // not sure why the top needs to be constrained, but it does
           // TODO: ask Josh about constraining the byte on the top?
           curColor = neighbor - 2;  // set the color to the one just received
-          receivedSparkFrom = f;
+          didReceivedSparkFrom[f] = true;
           firecrackerTime_ms = now;
         }
         
@@ -101,7 +101,7 @@ void loop() {
   }
   else {
     shouldSendSpark = false;
-    receivedSparkFrom = -1;
+    resetReceived();
     showOnlyNeighbors();
   }
 }
@@ -115,6 +115,12 @@ void showOnlyNeighbors() {
     else {
       setFaceColor(f, OFF);
     }
+  }
+}
+
+void resetReceived() {
+  FOREACH_FACE(f) {
+    didReceivedSparkFrom[f] = 0;
   }
 }
 
