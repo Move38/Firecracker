@@ -24,7 +24,7 @@ uint16_t firecrackerDuration_ms = 400;
 uint16_t sendSparkDelay_ms = 100;
 uint16_t sendSparkDuration_ms = firecrackerDuration_ms - sendSparkDelay_ms;
 
-byte numColors = 10;
+byte numColors = 6;
 byte curColor = 0;
 
 void setup() {
@@ -36,12 +36,20 @@ void loop() {
   // put your main code here, to run repeatedly:
   uint32_t now = millis();
 
-  // if button pressed, firecracker
+  // if button single pressed, white firecracker
   if (buttonSingleClicked()) {
     resetReceived();
     firecrackerTime_ms = now;
-    curColor = millis() % numColors;
+    curColor = 0;
   }
+
+   // if button double pressed, colorful firecracker
+  if (buttonDoubleClicked()) {
+    resetReceived();
+    firecrackerTime_ms = now;
+    curColor = 1 + (millis() % numColors);
+  }
+
 
   if (shouldSendSpark) {
 
@@ -70,7 +78,7 @@ void loop() {
       // only if not ignited already
       if (now - firecrackerTime_ms > firecrackerDuration_ms) {
 
-        if (neighbor >= 2 && neighbor <= 2+numColors) { // not sure why the top needs to be constrained, but it does
+        if (neighbor >= 2 && neighbor <= 1 + 2 + numColors) { // not sure why the top needs to be constrained, but it does
           // TODO: ask Josh about constraining the byte on the top?
           curColor = neighbor - 2;  // set the color to the one just received
           didReceivedSparkFrom[f] = true;
@@ -90,8 +98,13 @@ void loop() {
 
     byte face = millis() % 6; // pick random face
     showOnlyNeighbors();
-    byte hue = curColor * 255 / numColors;
-    setFaceColor(face, makeColorHSB(hue, 196, 255));
+    if(curColor == 0) {
+      setFaceColor(face, WHITE);
+    }
+    else {
+      byte hue = (curColor-1) * 255 / numColors;
+      setFaceColor(face, makeColorHSB(hue, 196, 255));
+    }
 
     if ( now - firecrackerTime_ms > sendSparkDelay_ms &&
          now - firecrackerTime_ms < sendSparkDelay_ms + sendSparkDuration_ms) {
