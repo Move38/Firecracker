@@ -50,13 +50,13 @@ static const uint16_t burnDuration_ms = 400;
 
 
 // Show on an occupied face in READY state 
-static Color readyFaceColor = MAKECOLOR_RGB( 10,  8 , 0 );
+static Color readyFaceColor = makeColorRGB(  80, 64 , 0 );
 
 // Show on the face that we are sending the spark to 
-static Color sparkFaceColor = MAKECOLOR_RGB( 20 , 0 , 0 );
+static Color sparkFaceColor = makeColorRGB( 160,  0 , 0 );
 
 // Show on random faces as we ignite and burn
-static Color sparkleColor   = MAKECOLOR_RGB( 20 , 20 , 20 );
+static Color sparkleColor   = makeColorRGB( 160, 160 , 160 );
 
 void setup() {
   blinkStateBegin();
