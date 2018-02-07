@@ -15,9 +15,6 @@
 
 */
 
-#include "blinklib.h"
-#include "blinkstate.h"
-
 // Our local state. We also reuse these values as messages to send to neighbors
 
 enum state_t { 
@@ -59,7 +56,6 @@ static Color sparkFaceColor = ORANGE;
 static Color sparkleColor   = makeColorRGB( 255, 255 , 255);
 
 void setup() {
-  blinkStateBegin();
 }
 
 // Returns a face that (1) has not yet expired, and (2) is not `exclude`
