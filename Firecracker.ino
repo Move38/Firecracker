@@ -50,13 +50,13 @@ static const uint16_t burnDuration_ms = 400;
 
 
 // Show on an occupied face in READY state 
-static Color readyFaceColor = makeColorRGB(  80, 64 , 0 );
+static Color readyFaceColor = dim( WHITE, 32);
 
 // Show on the face that we are sending the spark to 
-static Color sparkFaceColor = makeColorRGB( 160,  0 , 0 );
+static Color sparkFaceColor = ORANGE;
 
 // Show on random faces as we ignite and burn
-static Color sparkleColor   = makeColorRGB( 160, 160 , 160 );
+static Color sparkleColor   = makeColorRGB( 255, 255 , 255);
 
 void setup() {
   blinkStateBegin();
@@ -74,7 +74,7 @@ static byte pickSparkTarget( byte exclude ) {
                 
     FOREACH_FACE(f) {
         
-        if ( (!isNeighborExpired(f)) && (f!=exclude) ) {
+        if ( (!isValueReceivedOnFaceExpired(f)) && (f!=exclude) ) {
             
             potentialTargetList[ potentialTargetCount ] = f;
             potentialTargetCount++;
@@ -113,9 +113,9 @@ void loop() {
     FOREACH_FACE(f) {
         
         
-        if (neighborStateChanged(f)) {
+        if (didValueOnFaceChange(f)) {
 
-            byte receivedMessage = getNeighborState(f);    
+            byte receivedMessage = getLastValueReceivedOnFace(f);    
             
             if (receivedMessage==BURN) {      // We just got a spark!
                 
@@ -147,7 +147,7 @@ void loop() {
   
     if (detonateFlag) {
         state=IGNITE;
-        nextState.setMSFromNow( igniteDurration_ms );
+        nextState.set( igniteDurration_ms );
     }      
       
     if ( nextState.isExpired() ) {        // Time for next timed state transition?
@@ -163,13 +163,11 @@ void loop() {
             targetFace = pickSparkTarget( sourceFace );
             
             state=BURN;
-            nextState.setMSFromNow( burnDuration_ms );
+            nextState.set( burnDuration_ms );
             
         } else if (state==BURN) {              // Technically don't need this `if` since this is the only possible case, but here for clarity.             
             
-            state=READY;
-            nextState.setNever();                 
-            
+            state=READY;            
         }                
                 
     }            
@@ -180,7 +178,7 @@ void loop() {
     
     FOREACH_FACE(f) {
           
-        if (!isNeighborExpired(f)) {
+        if (!isValueReceivedOnFaceExpired(f)) {
             setFaceColor(f, readyFaceColor );
         } else {
             setFaceColor(f, OFF );
@@ -193,6 +191,8 @@ void loop() {
     
     if (state == IGNITE || state == BURN ) {         
         // Blink a random face white
+        setFaceColor( rand( FACE_COUNT -1 ) , sparkleColor );            
+        // Blink up to two random faces white
         setFaceColor( rand( FACE_COUNT -1 ) , sparkleColor );            
     }        
     
@@ -210,7 +210,7 @@ void loop() {
 
         // This is a bit of a hack. We can't send our current state to everyone because then
         // we would infect everyone. So we send READY because it is benign.        
-        setState( READY ); 
+        setValueSentOnAllFaces( READY ); 
         
         if (targetFace != NO_FACE ) {
                    
@@ -218,7 +218,7 @@ void loop() {
             setFaceColor( targetFace , sparkFaceColor );            
                                        
             // We do explicitly send BURN to the target we are aiming to infect.
-            setState( state , targetFace );
+            setValueSentOnFace( state , targetFace );
             
         }  
         
@@ -228,7 +228,7 @@ void loop() {
         // Note that when we send IGNITE, the person who sent us burn will see it and
         // know that we ignited and will stop sending BURN out anymore. 
             
-        setState( state );
+        setValueSentOnAllFaces( state );
     }        
                                        
 }
