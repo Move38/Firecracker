@@ -40,10 +40,10 @@ static int targetFace=NO_FACE; // The face we are sending the spark to.
 Timer nextState;         // Time we switch to next state. Valid in EXPLODING, COOLDOWN, and INFECT.
 
 // How long between when we first get a spark and start sending a new spark
-static const uint16_t igniteDurration_ms = 200;
+static const uint16_t igniteDurration_ms = 500;
 
 // Time we will continue to burn after we start sparking
-static const uint16_t burnDuration_ms = 400;
+static const uint16_t burnDuration_ms = 2000;
 
 
 // Show on an occupied face in READY state 
@@ -55,7 +55,23 @@ static Color sparkFaceColor = ORANGE;
 // Show on random faces as we ignite and burn
 static Color sparkleColor   = makeColorRGB( 255, 255 , 255);
 
+
+// Display rainbow with rotation
+#define ROTATION_TIMER_DURATION 10
+
+Timer rotationTimer;
+
+uint16_t rotation_d = 0;     // Spin display over time
+
+
 void setup() {
+}
+
+// Sin in degrees ( standard sin() takes radians )
+
+float sin_d( uint16_t degrees ) {
+
+  return sin( ( degrees / 360.0F ) * 2.0F * PI   );
 }
 
 // Returns a face that (1) has not yet expired, and (2) is not `exclude`
@@ -186,11 +202,26 @@ void loop() {
     // will draw over the orange set above. 
     
     if (state == IGNITE || state == BURN ) {         
-        // Blink a random face white
-        setFaceColor( rand( FACE_COUNT -1 ) , sparkleColor );            
-        // Blink up to two random faces white
-        setFaceColor( rand( FACE_COUNT -1 ) , sparkleColor );            
-    }        
+      
+      FOREACH_FACE(f) {
+  
+        byte hue = (f * 5 + millis() / 10) % 255;
+        byte bri = 127 + 127 * sin_d(f * 60 + rotation_d);
+        byte sat = 255;
+        Color displayColor = makeColorHSB(hue, sat, bri);
+  
+        setFaceColor(f, displayColor);
+      }
+  
+      // rotate display
+      if (rotationTimer.isExpired()) {
+        rotation_d += 11;
+        rotationTimer.set(ROTATION_TIMER_DURATION);
+      }             
+    }
+    else {
+      setColor(OFF);        
+    }
     
     // Finally we set out outputs
         
