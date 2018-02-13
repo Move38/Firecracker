@@ -40,10 +40,10 @@ static int targetFace=NO_FACE; // The face we are sending the spark to.
 Timer nextState;         // Time we switch to next state. Valid in EXPLODING, COOLDOWN, and INFECT.
 
 // How long between when we first get a spark and start sending a new spark
-static const uint16_t igniteDurration_ms = 500;
+static const uint16_t igniteDurration_ms = 330;
 
 // Time we will continue to burn after we start sparking
-static const uint16_t burnDuration_ms = 2000;
+static const uint16_t burnDuration_ms = 60000;
 
 
 // Show on an occupied face in READY state 
@@ -63,6 +63,11 @@ Timer rotationTimer;
 
 uint16_t rotation_d = 0;     // Spin display over time
 
+
+// idle color
+Color teamColors[] = {OFF, RED, BLUE, YELLOW};
+
+byte colorIndex = 0;
 
 void setup() {
 }
@@ -155,6 +160,16 @@ void loop() {
         detonateFlag=true;
         sourceFace = NO_FACE;           // Manually initiated, so no source                
     }
+
+    // change team if triple clicked
+    if (buttonMultiClicked()) {
+      if (buttonClickCount() == 3) {
+        colorIndex++;
+        if(colorIndex>= COUNT_OF(teamColors)) {
+          colorIndex = 0;      
+        }
+      }
+    }
               
   
     if (detonateFlag) {
@@ -220,7 +235,7 @@ void loop() {
       }             
     }
     else {
-      setColor(OFF);        
+      setColor(teamColors[colorIndex]);        
     }
     
     // Finally we set out outputs
